@@ -4,22 +4,24 @@
 * @Date:   15-09-2016
 * @Email:  contact@nicolasfazio.ch
 * @Last modified by:   webmaster-fazio
-* @Last modified time: 08-02-2017
+* @Last modified time: 10-02-2017
 */
 
-import  { UnsplashService } from '../../providers/unsplash/unsplash-service';
+import { userSkeleton } from './user.ui';
+import { UnsplashService } from '../../providers/unsplash/unsplash-service';
 import { FirebaseService } from '../../providers/firebase/firebase-service';
+import { TimerComponent } from '../../components/timer-component';
 
 export class UserPage {
 
   constructor(appBody,formInput){
     this.appBody = appBody
     this.formData = formInput
-    this.time = new Date()
     this.pageTitle = this.greetings();
     this.userName = this.getUserName();
     this.database = new FirebaseService();
     this.initUI();
+    this.watchDB(); // need DOM ready to add elements
   }
 
   initUI(){
@@ -28,74 +30,24 @@ export class UserPage {
       document.getElementsByTagName("section")[0].parentNode.removeChild(document.getElementsByTagName("section")[0])
     }
 
+    // format data
+    let dataReady = {
+      pageTitle: this.pageTitle,
+      userName: this.userName,
+      email: this.formData.email
+    }
     // create page skeleton
-    let pageSkeleton = `
-      <section>
-        <main>
-          <h1 id="time"></h1>
-          <p>${this.pageTitle} ${this.userName}!</p>
-          <button id="download">Download</button>
-        </main>
-        <aside>
-          <div>
-            <h1>User Profil</h1>
-            <div>
-              <p>
-                You're connected as <b>${this.formData.email}</b>. Want to <span id="logout">logout?</span>
-              </p>
-            </div>
-            <h1>Links Settings:</h1>
-            <div id="linkList">Pas de liens pour le moment...</div>
-            <form id="linkSettingForm">
-              <input placeholder="title" name="title" type="text" class="validate" value="titre">
-              <br>
-              <input placeholder="url" name="url" type="url" class="validate" value="http://toto.ch">
-              <div>
-                  <button>
-                    Save
-                  </button>
-              </div>
-            </form>
-          </div>
-        </aside>
-        <footer>
-          <div>Photo by <address class="author"></address></div>
-          <div>This app using <a href="https://unsplash.com" target="_blank" title="Unsplash API">Unsplash API</a></div>
-        </footer>
-      </section>
-    `;
+    let pageSkeleton = userSkeleton(dataReady) ;
     // add page skeleton in body
     this.appBody.insertAdjacentHTML( 'afterbegin', pageSkeleton )
+$(".button-collapse").sideNav();
     this.loadEventUI()
     document.getElementsByTagName("section")[0].style.opacity = 0;
-    this.displayTime()
+    new TimerComponent();
     this.getBackgroundIMG()
   }
 
-  displayTime(){
-    let timeElement = document.getElementById('time')
-    // some css with JS for time txt
-    timeElement.innerHTML = this.getTime(this.time)
-    timeElement.style.fontSize = '10rem';
-    timeElement.style.margin = '0rem';
-    timeElement.style.textShadow = '0px 0px 50px rgba(0, 0, 0, 0.21)';
-    // run interval
-    setInterval(()=>{
-      // asigne a new Date()
-      this.time = new Date();
-      //console.log(`${this.time.getHours()}:${this.time.getMinutes()}:${this.time.getSeconds()}`)
-      // replace innerHTML of time element
-      timeElement.innerHTML = this.getTime(this.time)
-    },1000)
-  }
 
-  getTime(time){
-    return    `
-    <time datetime="${(time.getFullYear() < 10)?'0'+time.getFullYear():time.getFullYear()}-${(time.getMonth() < 10)?'0'+time.getMonth():time.getMonth()}-${(time.getDate() < 10)?'0'+time.getDate():time.getDate()} ${(time.getHours() < 10)?'0'+time.getHours():time.getHours()}:${(time.getMinutes() < 10)?'0'+time.getMinutes():time.getMinutes()}:${(time.getSeconds() < 10)?'0'+time.getSeconds():time.getSeconds()}">
-      ${(time.getHours() < 10)?'0'+time.getHours():time.getHours()}:${(time.getMinutes() < 10)?'0'+time.getMinutes():time.getMinutes()}:${(time.getSeconds() < 10)?'0'+time.getSeconds():time.getSeconds()}
-    </time >
-    `;
-  }
 
   getBackgroundIMG(){
       let unsplash = new UnsplashService();
@@ -159,12 +111,13 @@ export class UserPage {
   }
 
   greetings(){
+    let time = new Date();
     let greetings;
     switch (true) {
-      case this.time.getHours()>5 && this.time.getHours()<=10:
+      case time.getHours()>5 && time.getHours()<=10:
         greetings = 'Good morning'
         break;
-      case this.time.getHours()>=11 && this.time.getHours()<=17:
+      case time.getHours()>=11 && time.getHours()<=17:
         greetings = 'Hello'
         break;
       default:
@@ -183,6 +136,15 @@ export class UserPage {
     if(linkSettingForm){
       linkSettingForm.addEventListener('submit', (event)=> this.saveLinkData(event))
     }
+    let linkList = document.getElementById('linkList')
+    if(linkList){
+      linkList.addEventListener('click', (event)=> this.detectClick(event))
+    }
+
+    let logout = document.getElementById('logout')
+    if(logout){
+      logout.addEventListener('click', _=> this.database.logOut())
+    }
   }
 
   saveLinkData(event){
@@ -196,5 +158,159 @@ export class UserPage {
       }
     }
     console.log('dataReady-> ',dataReady);
+    // is a update
+    if(dataReady.key){
+      // capture item.key
+      let updateItemID = dataReady.key;
+      // then remove key from dataReady
+      delete dataReady.key;
+      console.log(updateItemID, dataReady)
+      let updatedItem = this.database.update('linksList/'+this.formData.uid, updateItemID, dataReady)
+      updatedItem.then((error)=>{
+        if(error){
+          console.log('Error update result-> ', error)
+        }
+      })
+    }
+    // else if is a new item
+    else {
+      this.database.create('linksList/'+this.formData.uid,dataReady)
+        .then(
+          result => {
+            console.log('success on added-> ', result.key);
+          },
+          error =>  {
+            console.log('error on added');
+          }
+        )
+    }
+
+  }
+
+  watchDB(){
+    // defin DB ref()
+    let linksListDB = this.database.read('linksList/'+this.formData.uid)
+
+    // watch all child_added
+    linksListDB.on('child_added',
+      (response)=>{
+        console.log('onChild_added: item-> ', response.val());
+        this.displayLinkinAside(response)
+        this.displayLinkinApp(response)
+      },
+      (error)=>{
+        console.log('error read-> ', error);
+      }
+    )
+
+    // watch all child_changed
+    linksListDB.on('child_changed',
+      (response)=>{
+        console.log('onChild_changed: item-> ', response.val());
+        this.displayLinkinAside(response)
+        this.displayLinkinApp(response);
+      },
+      (error)=>{
+        console.log('error read-> ', error);
+      }
+    )
+  }
+
+  displayLinkinAside(item){
+    let linkList = document.getElementById('linkList')
+    if(linkList){
+      // remove default text on empty linkList
+      if(document.getElementById("noLinks")){
+        document.getElementById("noLinks").parentNode.removeChild(document.getElementById("noLinks"))
+      }
+      // test if item already exist
+      if(document.getElementById(item.key)){
+        document.getElementById(item.key).innerHTML = `
+          <p>
+            ${item.val().title}: ${item.val().url}
+            <button>edit</button>
+            <button class="dell">dell</button>
+          </p>
+        `;
+      }
+      // else is a new item element
+      else {
+        let itemSkeleton = `
+          <div id="${item.key}">
+            <p>
+              ${item.val().title}: ${item.val().url}
+              <button>edit</button>
+              <button class="dell">dell</button>
+            </p>
+          </div>
+        `
+        linkList.insertAdjacentHTML('afterbegin', itemSkeleton)
+      }
+
+    }
+  }
+
+  displayLinkinApp(item) {
+    let btnList = document.getElementById('btnList')
+    if(btnList){
+      console.log('ppp');
+      let itemSkeleton = `
+        <a class="waves-effect waves-light btn" href="${item.val().url}" target="_blank" title="${item.val().title}">
+          ${item.val().title}
+        </a>
+      `;
+      btnList.insertAdjacentHTML('afterbegin', itemSkeleton)
+    }
+  }
+  detectClick(event){
+    event.preventDefault();
+    // if click is not on a btn
+    if(event.target.nodeName != 'BUTTON'){
+      return;
+    }
+    // if is click on dell btn (check if element have class name)
+    if(event.target.className.indexOf('dell') > -1){
+      this.dellItem(event)
+      return;
+    }
+    // else is click on edit btn
+    this.loadDataInForm(event)
+  }
+
+  loadDataInForm(event){
+
+    let itemID = event.target.parentElement.parentElement.id;
+    let itemData = this.database.read('linksList/'+this.formData.uid+'/'+itemID)
+    itemData.once('value').then((item)=>{
+      if(item.val() === null){
+        return;
+      }
+      console.log('item finded-> ', item.val())
+      // petit cadeau: document.querySelector()
+      // à la jQuery style ;-)
+      // doc => https://developer.mozilla.org/fr/docs/Web/API/Document/querySelector
+      document.querySelector("input[name='key']").value = item.key
+      document.querySelector("input[name='title']").value = item.val().title
+      document.querySelector("input[name='url']").value = item.val().url
+    })
+  }
+
+  dellItem(event){
+    console.log('delete item')
+    let itemID = event.target.parentElement.parentElement.id;
+    let deleteItem = this.database.delete('linksList/'+this.formData.uid, itemID)
+    deleteItem.then((error)=>{
+      if(error){
+        console.log('Error update result-> ', error)
+      }
+      else {
+        // remove item from list with JS
+        if(document.getElementById(itemID)){
+          document.getElementById(itemID).parentNode.removeChild(document.getElementById(itemID))
+        }
+      }
+    })
   }
 }
+Contact GitHub API Training Shop Blog About
+© 2017 GitHub, Inc. Terms Privacy Security Status Help

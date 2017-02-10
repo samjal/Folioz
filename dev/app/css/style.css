@@ -1,0 +1,40 @@
+/**
+* @Author: Nicolas Fazio <webmaster-fazio>
+* @Date:   10-02-2017
+* @Email:  contact@nicolasfazio.ch
+* @Last modified by:   webmaster-fazio
+* @Last modified time: 10-02-2017
+*/
+header, footer {
+  position: absolute;
+  width: 100%;
+}
+footer {
+  bottom:0;
+}
+address {
+  display: inline;
+}
+.displayTable {
+  display: table;
+  height: 100%;
+  width: 100%;
+}
+.displayCell {
+  display: table-cell;
+  vertical-align: middle;
+  width: 100%;
+}
+.greetings {
+    font-size: 3.2rem;
+    margin: 0;
+}
+#download > i{
+  margin-top: 10px;
+}
+.side-nav {
+  width:600px;
+}
+aside {
+  color: #333;
+}
