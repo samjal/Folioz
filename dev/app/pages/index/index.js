@@ -6,17 +6,15 @@
 * @Last modified time: 14-02-2017
 */
 
-import { PortfolioPage } from '../../pages/portfolio/portfolio';
-import { FavoritesPage } from '../../pages/favorites/favorites';
-import { MarketsPage } from '../../pages/markets/markets';
+import { HomePage } from '../../pages/home/home';
 import { BuildPage } from '../../pages/build/build';
 
-export class HomePage {
+export class IndexPage {
 
-  constructor(appBody,formInput){
+  constructor(appBody){
     this.appBody = appBody
-    this.formData = formInput
     this.pageTitle = 'Welcome';
+    //this.fbService = new FirebaseService();
     this.initUI();
   }
 
@@ -28,55 +26,49 @@ export class HomePage {
     // create page skeleton
     let pageSkeleton = `
       <section>
-        <div class="container">
-          <h1>${this.pageTitle}</h1>
-          <div class="row">
-            <div class="col s6"><div class="waves-effect waves-light btn">Portfolios</div></div>
-            <div class="col s6"><div class="waves-effect waves-light btn">Favorites</div></div>
-          </div>
-          <div class="row">
-            <div class="col s6"><div class="waves-effect waves-light btn">Markets</div></div>
-            <div class="col s6"><div class="waves-effect waves-light btn">Build Portfolio</div></div>
-          </div>
-          <div class="row">
-            <div class="col s6"><div class="waves-effect waves-light btn">Sectors</div></div>
-            <div class="col s6"><div class="waves-effect waves-light btn">Strategies</div></div>
-          </div>
-          <div class="row">
-            <div class="col s12"><div class="waves-effect waves-light btn">Others</div></div>
-          </div>
-        </div>
+        <h1>${this.pageTitle}</h1>
+        <form>
+          <p>
+            <label for="email">Email:</label> <input type="email" name="email" value="" placeholder="votreemail.ch"  /><br/>
+            <label for="password">Password:</label> <input type="password" name="password" value=""  /><br/>
+            <button>Login</button>
+          </p>
+        </form>
+        <!--<button id="googleBtn">Log with Google</button>-->
       </section>`;
     // add page skeleton in body
     this.appBody.insertAdjacentHTML( 'afterbegin', pageSkeleton )
+
     this.loadEventUI()
-
-    }
-
-  loadEventUI(){
-
-    // let googleBtn = document.getElementById("googleBtn");
-    // googleBtn.addEventListener("click",  event => this.googleAuth(event), false)
 
   }
 
-  // onLogin(event){
-  //   event.preventDefault()
-  //   let validationInput = 0
-  //   let formInput = {}
-  //   let form = document.forms[0].elements
-  //   for (let i = 0; i < form.length; i++) {
-  //     if(form[i].value){
-  //       formInput[form[i].name] = form[i].value
-  //       validationInput++
-  //     }
-  //   }
-  //   console.log(formInput)
-  //   if(validationInput === 2){
-  //     console.log('load UserPage')
-  //     new HomePage(this.appBody,formInput);
-  //   }
-  //}
+  loadEventUI(){
+    let loginForm = document.getElementsByTagName("form")[0];
+    loginForm.addEventListener("submit",  event => this.onLogin(event), false)
+  }
+    // let googleBtn = document.getElementById("googleBtn");
+    // googleBtn.addEventListener("click",  event => this.googleAuth(event), false)
+
+
+  onLogin(event){
+    event.preventDefault()
+    let validationInput = 0
+    let formInput = {}
+    let form = document.forms[0].elements
+    for (let i = 0; i < form.length; i++) {
+      if(form[i].value){
+        formInput[form[i].name] = form[i].value
+        validationInput++
+      }
+    }
+    console.log(formInput)
+    if(validationInput === 2){
+      console.log('load HomePage')
+      //new HomePage(this.appBody,formInput);
+      new BuildPage(this.appBody,formInput);
+    }
+  }
 
   // googleAuth(event){
   //   event.preventDefault();

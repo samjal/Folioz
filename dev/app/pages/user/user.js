@@ -15,8 +15,8 @@ import { TimerComponent } from '../../components/timer-component';
 export class UserPage {
 
   constructor(appBody,formInput){
-    this.appBody = appBody
-    this.formData = formInput
+    this.appBody = appBody;
+    this.formData = formInput;
     this.pageTitle = this.greetings();
     this.userName = this.getUserName();
     this.database = new FirebaseService();
@@ -40,7 +40,7 @@ export class UserPage {
     let pageSkeleton = userSkeleton(dataReady) ;
     // add page skeleton in body
     this.appBody.insertAdjacentHTML( 'afterbegin', pageSkeleton )
-$(".button-collapse").sideNav();
+    $(".button-collapse").sideNav();
     this.loadEventUI()
     document.getElementsByTagName("section")[0].style.opacity = 0;
     new TimerComponent();

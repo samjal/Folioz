@@ -24,6 +24,7 @@ var config = {
     materializeJS: ['dev/src/materialize/js/materialize.min.js'],
     materializeFONT: ['dev/src/materialize/fonts/**/*'],
     jquery: ['dev/src/jquery/jquery-3.1.1.min.js'],
+    barchart:['dev/src/js/barchart-ondemand-client-js.min.js'],
     customCSS: ['dev/src/css/style.css'],
     desDir:    './dist' /* répértoire de destination (prod) */
 }
@@ -34,7 +35,8 @@ gulp.task("run",[
   'copy-css',
   'copy-font',
   'build-js',
-  'copy-html'
+  'copy-html',
+  'copy-barchart-js'
 ]);
 gulp.task('default', ['run'], function() {
     gulp.start('startServer', 'watch');
@@ -67,6 +69,11 @@ gulp.task("copy-mat-js", function(){
         .pipe(gulp.dest(config.desDir+'/js'))
 });
 
+// Task to copy JS barchart files
+gulp.task("copy-barchart-js", function(){
+    return gulp.src(config.barchart)
+        .pipe(gulp.dest(config.desDir+'/js'))
+});
 // Task to copy CSS Mateialize files
 gulp.task("copy-font", function(){
     return gulp.src(config.materializeFONT)
